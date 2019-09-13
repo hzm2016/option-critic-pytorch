@@ -43,20 +43,14 @@ def plot_ppo():
 def plot_ddpg_td3():
     plotter = Plotter()
     games = [
-        'HalfCheetah-v2',
-        'Walker2d-v2',
-        'Hopper-v2',
-        'Swimmer-v2',
-        'Reacher-v2',
+        'RoboschoolWalker2d-v1'
     ]
 
     patterns = [
-        'remark_ddpg',
-        'remark_td3',
+        '',
     ]
 
     labels = [
-        'DDPG',
         'TD3',
     ]
 
@@ -67,9 +61,9 @@ def plot_ddpg_td3():
                        labels=labels,
                        right_align=False,
                        tag=plotter.RETURN_TEST,
-                       root='./data/benchmark',
+                       root='./tf_log/logger-RoboschoolWalker2d-v1--run-0-190912-155802',
                        interpolation=0,
-                       window=0,
+                       window=10,
                        )
 
     # plt.show()

@@ -38,6 +38,7 @@ class Plotter:
         kwargs.setdefault('top_k_measure', None)
         kwargs.setdefault('interpolation', 100)
         xy_list = self.load_log_dirs(dirs, **kwargs)
+        print(xy_list)
 
         if kwargs['top_k']:
             perf = [kwargs['top_k_measure'](y) for _, y in xy_list]
@@ -79,7 +80,6 @@ class Plotter:
             if p.match(dir) and not np.match(dir):
                 names.append(dir)
                 print(dir)
-        print('')
         return sorted(names)
 
     def load_log_dirs(self, dirs, **kwargs):

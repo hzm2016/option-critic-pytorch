@@ -340,6 +340,35 @@ def option_critic_pixel(**kwargs):
     run_steps(OptionCriticAgent(config))
 
 
+# Option-critic continuous
+def oc_continuous(**kwargs):
+    generate_tag(kwargs)
+    kwargs.setdefault('log_level', 0)
+    config = Config()
+    config.merge(kwargs)
+
+    config.num_workers = 5
+    config.task_fn = lambda: Task(config.game, num_envs=config.num_workers)
+    config.eval_env = Task(config.game)
+    config.optimizer_fn = lambda params: torch.optim.RMSprop(params, 0.001)
+    config.network_fn = lambda: OptionGaussianActorCriticNet(config.state_dim, config.action_dim, num_options=2,
+                                                             phi_body=DummyBody(config.state_dim),
+                                                             actor_body=FCBody(config.state_dim),
+                                                             critic_body=FCBody(config.state_dim),
+                                                             option_body_fn=FCBody(config.state_dim)
+                                                             )
+
+    config.random_option_prob = LinearSchedule(1.0, 0.1, 1e4)
+    config.discount = 0.99
+    config.target_network_update_freq = 200
+    config.rollout_length = 5
+    config.termination_regularizer = 0.01
+    config.entropy_weight = 0.01
+    config.gradient_clip = 5
+    config.beta_reg = 0.01
+    run_steps(OCAgent(config))
+
+
 # PPO
 def ppo_feature(**kwargs):
     generate_tag(kwargs)
@@ -417,6 +446,68 @@ def ppo_continuous(**kwargs):
     config.max_steps = 1e6
     config.state_normalizer = MeanStdNormalizer()
     run_steps(PPOAgent(config))
+
+
+# PPOC
+def ppoc_continuous(**kwargs):
+    generate_tag(kwargs)
+    kwargs.setdefault('log_level', 0)
+    config = Config()
+    config.merge(kwargs)
+
+    config.task_fn = lambda: Task(config.game)
+    config.eval_env = config.task_fn()
+
+    config.network_fn = lambda: OptionGaussianActorCriticNet(config.state_dim, config.action_dim, num_options=2,
+                                                             actor_body=FCBody(config.state_dim, gate=torch.tanh),
+                                                             critic_body=FCBody(config.state_dim, gate=torch.tanh),
+                                                             option_body_fn=FCBody(config.state_dim)
+                                                             )
+    config.optimizer_fn = lambda params: torch.optim.Adam(params, 3e-4, eps=1e-5)
+    config.discount = 0.99
+    config.use_gae = True
+    config.gae_tau = 0.95
+    config.gradient_clip = 0.5
+    config.rollout_length = 2048
+    config.optimization_epochs = 10
+    config.mini_batch_size = 64
+    config.ppo_ratio_clip = 0.2
+    config.log_interval = 2048
+    config.max_steps = 1e6
+    config.beta_reg = 0.01
+    config.state_normalizer = MeanStdNormalizer()
+    run_steps(OptionD3PGAgent(config))
+
+# DOC
+def doc_continuous(**kwargs):
+    generate_tag(kwargs)
+    kwargs.setdefault('log_level', 0)
+    config = Config()
+    config.merge(kwargs)
+
+    config.task_fn = lambda: Task(config.game)
+    config.eval_env = config.task_fn()
+    config.max_steps = int(1e6)
+    config.eval_interval = int(1e4)
+    config.eval_episodes = 20
+
+    config.network_fn = lambda: DeterministicOptionCriticNet(action_dim=config.action_dim, num_options=2,
+                                                                phi_body=DummyBody(config.state_dim),
+                                                                actor_body=FCBody(config.state_dim, (400, 300), gate=F.relu),
+                                                                critic_body=TwoLayerFCBodyWithAction(
+                                                                config.state_dim, config.action_dim, (400, 300), gate=F.relu),
+                                                                beta_body=FCBody(config.state_dim, (400, 300), gate=F.relu),
+                                                                actor_opt_fn=lambda params: torch.optim.Adam(params, lr=1e-4),
+                                                                critic_opt_fn=lambda params: torch.optim.Adam(params, lr=1e-3),
+                                                             )
+
+    config.replay_fn = lambda: Replay(memory_size=int(1e6), batch_size=64)
+    config.discount = 0.99
+    config.random_process_fn = lambda: OrnsteinUhlenbeckProcess(
+        size=(config.action_dim,), std=LinearSchedule(0.2))
+    config.warm_up = int(1e4)
+    config.target_network_mix = 1e-3
+    run_steps(OptionD3PGAgent(config))
 
 
 # DDPG
@@ -500,11 +591,13 @@ if __name__ == '__main__':
     # ppo_feature(game=game)
 
     # game = 'HalfCheetah-v2'
-    game = 'Hopper-v2'
+    game = 'RoboschoolWalker2d-v1'
+    # oc_continuous(game=game)
+    doc_continuous(game=game)
     # a2c_continuous(game=game)
     # ppo_continuous(game=game)
     # ddpg_continuous(game=game)
-    td3_continuous(game=game)
+    # td3_continuous(game=game)
 
     game = 'BreakoutNoFrameskip-v4'
     # dqn_pixel(game=game)
