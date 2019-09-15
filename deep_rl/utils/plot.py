@@ -88,6 +88,7 @@ class Plotter:
         for dir in dirs:
             event_acc = EventAccumulator(dir)
             event_acc.Reload()
+            print(kwargs['tag'])
             _, x, y = zip(*event_acc.Scalars(kwargs['tag']))
             xy_list.append([x, y])
         if kwargs['right_align']:
@@ -120,7 +121,9 @@ class Plotter:
         if x is None:
             x = np.arange(data.shape[1])
         e_x = np.std(data, axis=0)
+        print('variance', e_x)
         m_x = np.median(data, axis=0)
+        print('mean', m_x)
         plt.plot(x, m_x, **kwargs)
         del kwargs['label']
         plt.fill_between(x, m_x + e_x, m_x - e_x, alpha=0.3, **kwargs)

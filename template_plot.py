@@ -56,12 +56,12 @@ def plot_ddpg_td3():
 
     plotter.plot_games(games=games,
                        patterns=patterns,
-                       agg='mean',
+                       agg='median',
                        downsample=0,
                        labels=labels,
                        right_align=False,
-                       tag=plotter.RETURN_TEST,
-                       root='./tf_log/logger-RoboschoolWalker2d-v1--run-0-190912-155802',
+                       tag=plotter.RETURN_TRAIN,
+                       root='./tf_log/logger-RoboschoolWalker2d-v1--run-0-190913-162945',
                        interpolation=0,
                        window=10,
                        )
@@ -99,14 +99,14 @@ def plot_atari():
 
     plotter.plot_games(games=games,
                        patterns=patterns,
-                       agg='mean',
+                       agg='agg',
                        downsample=100,
                        labels=labels,
                        right_align=False,
                        tag=plotter.RETURN_TRAIN,
                        root='./data/benchmark/atari',
                        interpolation=0,
-                       window=100,
+                       window=10,
                        )
 
     # plt.show()

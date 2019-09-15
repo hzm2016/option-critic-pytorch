@@ -452,6 +452,7 @@ class DeterministicOptionCriticNet(nn.Module, BaseNet):
         q = torch.cat(q, dim=1)
         return q
 
+
 class GammaDeterministicOptionCriticNet(nn.Module, BaseNet):
     def __init__(self,
                  action_dim,
@@ -513,6 +514,7 @@ class GammaDeterministicOptionCriticNet(nn.Module, BaseNet):
         self.fc_critics.zero_grad()
         self.critic_body.zero_grad()
 
+
 class EnvModel(nn.Module):
     def __init__(self, phi_dim, action_dim):
         super(EnvModel, self).__init__()
@@ -533,6 +535,7 @@ class EnvModel(nn.Module):
 
         return phi_s_prime, r
 
+
 class ActorModel(nn.Module):
     def __init__(self, phi_dim, action_dim):
         super(ActorModel, self).__init__()
@@ -546,6 +549,7 @@ class ActorModel(nn.Module):
 
     def forward(self, phi_s):
         return self.layers(phi_s)
+
 
 class CriticModel(nn.Module):
     def __init__(self, phi_dim, action_dim):

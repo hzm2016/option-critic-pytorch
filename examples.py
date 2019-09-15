@@ -458,10 +458,11 @@ def ppoc_continuous(**kwargs):
     config.task_fn = lambda: Task(config.game)
     config.eval_env = config.task_fn()
 
-    config.network_fn = lambda: OptionGaussianActorCriticNet(config.state_dim, config.action_dim, num_options=2,
-                                                             actor_body=FCBody(config.state_dim, gate=torch.tanh),
-                                                             critic_body=FCBody(config.state_dim, gate=torch.tanh),
-                                                             option_body_fn=FCBody(config.state_dim)
+    config.network_fn = lambda: OptionGaussianActorCriticNet(
+        config.state_dim, config.action_dim, num_options=2,
+        actor_body=FCBody(config.state_dim, gate=torch.tanh),
+        critic_body=FCBody(config.state_dim, gate=torch.tanh),
+        option_body_fn=FCBody(config.state_dim)
                                                              )
     config.optimizer_fn = lambda params: torch.optim.Adam(params, 3e-4, eps=1e-5)
     config.discount = 0.99
@@ -476,7 +477,8 @@ def ppoc_continuous(**kwargs):
     config.max_steps = 1e6
     config.beta_reg = 0.01
     config.state_normalizer = MeanStdNormalizer()
-    run_steps(OptionD3PGAgent(config))
+    run_steps(PPOCAgent(config))
+
 
 # DOC
 def doc_continuous(**kwargs):
@@ -574,8 +576,8 @@ def td3_continuous(**kwargs):
 
 
 if __name__ == '__main__':
-    mkdir('log')
-    mkdir('tf_log')
+    mkdir('log/ppoc')
+    mkdir('tf_log/ppoc')
     set_one_thread()
     random_seed()
     select_device(-1)
@@ -593,11 +595,12 @@ if __name__ == '__main__':
     # game = 'HalfCheetah-v2'
     game = 'RoboschoolWalker2d-v1'
     # oc_continuous(game=game)
-    doc_continuous(game=game)
+    # doc_continuous(game=game)
     # a2c_continuous(game=game)
     # ppo_continuous(game=game)
     # ddpg_continuous(game=game)
     # td3_continuous(game=game)
+    ppoc_continuous(game=game)
 
     game = 'BreakoutNoFrameskip-v4'
     # dqn_pixel(game=game)
@@ -607,3 +610,7 @@ if __name__ == '__main__':
     # n_step_dqn_pixel(game=game)
     # option_critic_pixel(game=game)
     # ppo_pixel(game=game)
+
+    env_list = ['RoboschoolHopper-v1', 'RoboschoolWalker2d-v1',
+                'RoboschoolHalfCheetah-v1', 'RoboschoolAnt-v1',
+                'RoboschoolHumanoid-v1']
