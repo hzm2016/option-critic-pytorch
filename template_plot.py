@@ -61,7 +61,7 @@ def plot_ddpg_td3():
                        labels=labels,
                        right_align=False,
                        tag=plotter.RETURN_TRAIN,
-                       root='./tf_log/logger-RoboschoolWalker2d-v1--run-0-190913-162945',
+                       root='./tf_log/logger-RoboschoolWalker2d-v1--run-0-190915-120750',
                        interpolation=0,
                        window=10,
                        )
