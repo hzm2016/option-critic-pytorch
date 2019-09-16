@@ -30,6 +30,8 @@ class PPOCAgent(BaseAgent):
         self.all_options = []
 
     def compute_pi_hat(self, prediction, prev_option, is_intial_states):
+        # sample option
+
         inter_pi = prediction['inter_pi']
         mask = torch.zeros_like(inter_pi)
         mask[self.worker_index, prev_option] = 1
@@ -40,6 +42,8 @@ class PPOCAgent(BaseAgent):
         return pi_hat
 
     def compute_pi_bar(self, options, action, mean, std):
+        # calculate action
+
         options = options.unsqueeze(-1).expand(-1, -1, mean.size(-1))
         mean = mean.gather(1, options).squeeze(1)
         std = std.gather(1, options).squeeze(1)
@@ -76,8 +80,9 @@ class PPOCAgent(BaseAgent):
             all_ret[i] = ret.detach()
 
     def learn(self, storage):
-        config = self.config
+        # training
 
+        config = self.config
         states, actions, log_pi_bar_old, options, returns, advantages, inits, prev_options = storage.cat(
             ['s', 'a', 'log_pi_bar', 'o', 'ret', 'adv', 'init', 'prev_o'])
         actions = actions.detach()
@@ -123,12 +128,13 @@ class PPOCAgent(BaseAgent):
                 nn.utils.clip_grad_norm_(self.network.parameters(), config.gradient_clip)
                 self.opt.step()
 
-
     def step(self):
         config = self.config
         storage = Storage(config.rollout_length)
         states = self.states
         for _ in range(config.rollout_length):
+
+            # select option
             prediction = self.network(states)
             pi_hat = self.compute_pi_hat(prediction, self.prev_options, self.is_initial_states)
             dist = torch.distributions.Categorical(probs=pi_hat)
@@ -139,6 +145,7 @@ class PPOCAgent(BaseAgent):
             self.logger.add_scalar('pi_hat_ent', dist.entropy(), log_level=5)
             self.logger.add_scalar('pi_hat_o', dist.log_prob(options).exp(), log_level=5)
 
+            # sample actions
             mean = prediction['mean'][self.worker_index, options]
             std = prediction['std'][self.worker_index, options]
             dist = torch.distributions.Normal(mean, std)
@@ -151,8 +158,8 @@ class PPOCAgent(BaseAgent):
             self.record_online_return(info)
             rewards = config.reward_normalizer(rewards)
             next_states = config.state_normalizer(next_states)
-            storage.add(prediction)
 
+            storage.add(prediction)
             storage.add({'r': tensor(rewards).unsqueeze(-1),
                          'm': tensor(1 - terminals).unsqueeze(-1),
                          'a': actions,
@@ -170,12 +177,14 @@ class PPOCAgent(BaseAgent):
             states = next_states
             self.total_steps += config.num_workers
 
+        # select next option
         self.states = states
         prediction = self.network(states)
         pi_hat = self.compute_pi_hat(prediction, self.prev_options, self.is_initial_states)
         dist = torch.distributions.Categorical(pi_hat)
         options = dist.sample()
 
+        # storage next option data
         storage.add(prediction)
         storage.add({
             'v': prediction['q_o'][self.worker_index, options].unsqueeze(-1)
@@ -183,4 +192,6 @@ class PPOCAgent(BaseAgent):
         storage.placeholder()
 
         self.compute_adv(storage)
+
+        # training process
         self.learn(storage)

@@ -7,6 +7,7 @@ import numpy as np
 import torch
 # from ..component.common.running_mean_std import RunningMeanStd
 
+
 class RunningMeanStd(object):
     # https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Parallel_algorithm
     def __init__(self, epsilon=1e-4, shape=()):
@@ -23,6 +24,7 @@ class RunningMeanStd(object):
     def update_from_moments(self, batch_mean, batch_var, batch_count):
         self.mean, self.var, self.count = update_mean_var_count_from_moments(
             self.mean, self.var, self.count, batch_mean, batch_var, batch_count)
+
 
 def update_mean_var_count_from_moments(mean, var, count, batch_mean, batch_var, batch_count):
     delta = batch_mean - mean
@@ -79,6 +81,7 @@ class MeanStdNormalizer(BaseNormalizer):
     def load_state_dict(self, saved):
         self.rms.mean = saved['mean']
         self.rms.var = saved['var']
+
 
 class RescaleNormalizer(BaseNormalizer):
     def __init__(self, coef=1.0):

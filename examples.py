@@ -343,7 +343,7 @@ def option_critic_pixel(**kwargs):
 # Option-critic continuous
 def oc_continuous(**kwargs):
     generate_tag(kwargs)
-    kwargs.setdefault('log_level', 0)
+    kwargs.setdefault('log_level', 1)
     config = Config()
     config.merge(kwargs)
 
@@ -366,6 +366,9 @@ def oc_continuous(**kwargs):
     config.entropy_weight = 0.01
     config.gradient_clip = 5
     config.beta_reg = 0.01
+    config.log_interval = 2048
+    config.save_interval = 100
+    config.max_steps = 1e6
     run_steps(OCAgent(config))
 
 
@@ -576,8 +579,9 @@ def td3_continuous(**kwargs):
 
 
 if __name__ == '__main__':
-    mkdir('log/ppoc')
-    mkdir('tf_log/ppoc')
+    mkdir('log/oc')
+    mkdir('tf_log/oc')
+    mkdir('data')
     set_one_thread()
     random_seed()
     select_device(-1)
@@ -594,13 +598,13 @@ if __name__ == '__main__':
 
     # game = 'HalfCheetah-v2'
     game = 'RoboschoolWalker2d-v1'
-    # oc_continuous(game=game)
+    oc_continuous(game=game)
     # doc_continuous(game=game)
     # a2c_continuous(game=game)
     # ppo_continuous(game=game)
     # ddpg_continuous(game=game)
     # td3_continuous(game=game)
-    ppoc_continuous(game=game)
+    # ppoc_continuous(game=game)
 
     game = 'BreakoutNoFrameskip-v4'
     # dqn_pixel(game=game)
