@@ -365,6 +365,8 @@ def oc_continuous(**kwargs):
     config.termination_regularizer = 0.01
     config.entropy_weight = 0.01
     config.gradient_clip = 5
+    config.max_steps = 1e6
+    config.rollout_length = 2048
     config.beta_reg = 0.01
     run_steps(OCAgent(config))
 
@@ -459,7 +461,7 @@ def ppoc_continuous(**kwargs):
     config.eval_env = config.task_fn()
 
     config.network_fn = lambda: OptionGaussianActorCriticNet(
-        config.state_dim, config.action_dim, num_options=2,
+        config.state_dim, config.action_dim, num_options=8,
         actor_body=FCBody(config.state_dim, gate=torch.tanh),
         critic_body=FCBody(config.state_dim, gate=torch.tanh),
         option_body_fn=FCBody(config.state_dim)
@@ -474,7 +476,7 @@ def ppoc_continuous(**kwargs):
     config.mini_batch_size = 64
     config.ppo_ratio_clip = 0.2
     config.log_interval = 2048
-    config.max_steps = 1e6
+    config.max_steps = 1e7
     config.beta_reg = 0.01
     config.state_normalizer = MeanStdNormalizer()
     run_steps(PPOCAgent(config))
