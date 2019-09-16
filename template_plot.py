@@ -61,14 +61,14 @@ def plot_ddpg_td3():
                        labels=labels,
                        right_align=False,
                        tag=plotter.RETURN_TRAIN,
-                       root='./tf_log/logger-RoboschoolWalker2d-v1--run-0-190915-120750',
+                       root='./tf_log/logger-RoboschoolWalker2d-v1--run-0-190915-220900',
                        interpolation=0,
                        window=10,
                        )
 
     # plt.show()
     plt.tight_layout()
-    plt.savefig('images/mujoco_eval.png', bbox_inches='tight')
+    plt.savefig('images/oc.png', bbox_inches='tight')
 
 
 def plot_atari():
