@@ -3,7 +3,6 @@
 # Permission given to modify the code as long as you keep this        #
 # declaration at the top                                              #
 #######################################################################
-
 import numpy as np
 import pickle
 import os
@@ -20,8 +19,10 @@ def run_steps(agent):
     t0 = time.time()
     while True:
         if config.save_interval and not agent.total_steps % config.save_interval:
+            # save model
             agent.save('data/%s-%s-%d' % (agent_name, config.tag, agent.total_steps))
         if config.log_interval and not agent.total_steps % config.log_interval:
+            # logger information
             agent.logger.info('steps %d, %.2f steps/s' % (agent.total_steps, config.log_interval / (time.time() - t0)))
             t0 = time.time()
         if config.eval_interval and not agent.total_steps % config.eval_interval:

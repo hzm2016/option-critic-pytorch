@@ -14,15 +14,15 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s: %(message)s'
 from .misc import *
 
 
-def get_logger(tag='default', log_level=0):
+def get_logger(tag='default', log_level=0, log_dir=''):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     if tag is not None:
-        fh = logging.FileHandler('./log/%s-%s.txt' % (tag, get_time_str()))
+        fh = logging.FileHandler('./log/%s/%s-%s.txt' % (log_dir, tag, get_time_str()))
         fh.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s: %(message)s'))
         fh.setLevel(logging.INFO)
         logger.addHandler(fh)
-    return Logger(logger, './tf_log/logger-%s-%s' % (tag, get_time_str()), log_level)
+    return Logger(logger, './tf_log/%s/logger-%s-%s' % (log_dir, tag, get_time_str()), log_level)
 
 
 class Logger(object):
@@ -35,6 +35,7 @@ class Logger(object):
             self.warning = vanilla_logger.warning
         self.all_steps = {}
         self.log_dir = log_dir
+        print('log_dir', self.log_dir)
 
     def lazy_init_writer(self):
         if self.writer is None:

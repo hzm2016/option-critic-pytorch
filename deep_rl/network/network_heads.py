@@ -281,6 +281,7 @@ class OptionGaussianActorCriticNet(nn.Module, BaseNet):
         # build option network
         self.options = nn.ModuleList([SingleOptionNet(action_dim, option_body_fn) for _ in range(num_options)])
 
+        # linear output
         self.fc_pi_o = layer_init(nn.Linear(actor_body.feature_dim, num_options), 1e-3)
         self.fc_q_o = layer_init(nn.Linear(critic_body.feature_dim, num_options), 1e-3)
         self.fc_u_o = layer_init(nn.Linear(critic_body.feature_dim, num_options + 1), 1e-3)
@@ -290,6 +291,7 @@ class OptionGaussianActorCriticNet(nn.Module, BaseNet):
         self.to(Config.DEVICE)
 
     def forward(self, obs):
+
         # state feature
         obs = tensor(obs)
         phi = self.phi_body(obs)
@@ -307,13 +309,13 @@ class OptionGaussianActorCriticNet(nn.Module, BaseNet):
         std = torch.cat(std, dim=1)
         beta = torch.cat(beta, dim=1)
 
-        # policy over option
+        # policy over option with soft-max
         phi_a = self.actor_body(phi)
         phi_a = self.fc_pi_o(phi_a)
         pi_o = F.softmax(phi_a, dim=-1)
         log_pi_o = F.log_softmax(phi_a, dim=-1)
 
-        # critic
+        # critic network
         phi_c = self.critic_body(phi)
         q_o = self.fc_q_o(phi_c)
         u_o = self.fc_u_o(phi_c)
@@ -334,22 +336,37 @@ class SoftOptionGaussianActorCriticNet(nn.Module, BaseNet):
                  num_options,
                  phi_body=None,
                  actor_body=None,
+                 action_critic_body_1=None,
+                 action_critic_body_2=None,
                  critic_body=None,
                  option_body_fn=None):
         super(SoftOptionGaussianActorCriticNet, self).__init__()
+
         if phi_body is None: phi_body = DummyBody(state_dim)
-        if critic_body is None: critic_body = DummyBody(phi_body.feature_dim)
         if actor_body is None: actor_body = DummyBody(phi_body.feature_dim)
+
+        # calculate one state-option function
+        if critic_body is None: critic_body = DummyBody(phi_body.feature_dim)
+
+        # calculate two state-option-action function
+        if action_critic_body_1 is None: action_critic_body_1 = DummyBody(phi_body.feature_dim)
+        if action_critic_body_2 is None: action_critic_body_2 = DummyBody(phi_body.feature_dim)
 
         self.phi_body = phi_body
         self.actor_body = actor_body
         self.critic_body = critic_body
+        self.action_critic_body_1 = action_critic_body_1
+        self.action_critic_body_2 = action_critic_body_2
 
         # build option network
         self.options = nn.ModuleList([SingleOptionNet(action_dim, option_body_fn) for _ in range(num_options)])
 
-        self.fc_pi_o = layer_init(nn.Linear(actor_body.feature_dim, num_options), 1e-3)
-        self.fc_q_o = layer_init(nn.Linear(critic_body.feature_dim, num_options), 1e-3)
+        # critic network :: output layer
+        self.fc_pi_o = layer_init(nn.Linear(self.actor_body.feature_dim, num_options), 1e-3)
+        self.fc_q_o_1 = layer_init(nn.Linear(self.action_critic_body_1.feature_dim, num_options), 1e-3)
+        self.fc_q_o_2 = layer_init(nn.Linear(self.action_critic_body_2.feature_dim, num_options), 1e-3)
+        self.fc_v_o = layer_init(nn.Linear(self.critic_body.feature_dim, num_options), 1e-3)
+
         self.fc_u_o = layer_init(nn.Linear(critic_body.feature_dim, num_options + 1), 1e-3)
 
         self.num_options = num_options
@@ -357,6 +374,7 @@ class SoftOptionGaussianActorCriticNet(nn.Module, BaseNet):
         self.to(Config.DEVICE)
 
     def forward(self, obs):
+
         # state feature
         obs = tensor(obs)
         phi = self.phi_body(obs)
@@ -382,12 +400,16 @@ class SoftOptionGaussianActorCriticNet(nn.Module, BaseNet):
 
         # critic
         phi_c = self.critic_body(phi)
-        q_o = self.fc_q_o(phi_c)
+        q_o_1 = self.fc_q_o_1(phi_c)
+        q_o_2 = self.fc_q_o_2(phi_c)
+        v_o = self.fc_v_o(phi_c)
         u_o = self.fc_u_o(phi_c)
 
         return {'mean': mean,
                 'std': std,
-                'q_o': q_o,
+                'q_o_1': q_o_1,
+                'q_o_2': q_o_2,
+                'v_o': v_o,
                 'u_o': u_o,
                 'inter_pi': pi_o,
                 'log_inter_pi': log_pi_o,
@@ -466,6 +488,7 @@ class DeterministicOptionCriticNet(nn.Module, BaseNet):
                  actor_opt_fn,
                  critic_opt_fn,
                  gpu=-1):
+
         super(DeterministicOptionCriticNet, self).__init__()
         self.phi_body = phi_body
         self.actor_body = actor_body

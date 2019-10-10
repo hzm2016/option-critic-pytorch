@@ -3,7 +3,6 @@
 # Permission given to modify the code as long as you keep this        #
 # declaration at the top                                              #
 #######################################################################
-
 import torch
 import numpy as np
 from ..utils import *
@@ -15,7 +14,7 @@ from skimage.io import imsave
 class BaseAgent:
     def __init__(self, config):
         self.config = config
-        self.logger = get_logger(tag=config.tag, log_level=config.log_level)
+        self.logger = get_logger(tag=config.tag, log_level=config.log_level, log_dir=config.algorithm_name)
         self.task_ind = 0
 
     def close(self):
@@ -98,7 +97,6 @@ class BaseAgent:
     def record_step(self, state):
         raise NotImplementedError
 
-    # For DMControl
     def record_obs(self, env, dir, steps):
         env = env.env.envs[0]
         obs = env.render(mode='rgb_array')

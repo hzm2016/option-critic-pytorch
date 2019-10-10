@@ -49,6 +49,7 @@ class DDPGAgent(BaseAgent):
             action = self.network(self.state)
             action = to_np(action)
             action += self.random_process.sample()
+
         action = np.clip(action, self.task.action_space.low, self.task.action_space.high)
         next_state, reward, done, info = self.task.step(action)
         next_state = self.config.state_normalizer(next_state)
@@ -62,6 +63,7 @@ class DDPGAgent(BaseAgent):
         self.state = next_state
         self.total_steps += 1
 
+        # off-policy learning
         if self.replay.size() >= config.warm_up:
             experiences = self.replay.sample()
             states, actions, rewards, next_states, terminals = experiences

@@ -27,8 +27,11 @@ class OCAgent(BaseAgent):
 
     def sample_option(self, prediction, epsilon, prev_option, is_intial_states):
         with torch.no_grad():
+            # get q value
             q_option = prediction['q_o']
             pi_option = torch.zeros_like(q_option).add(epsilon / q_option.size(1))
+
+            # greedy policy
             greedy_option = q_option.argmax(dim=-1, keepdim=True)
             prob = 1 - epsilon + epsilon / q_option.size(1)
             prob = torch.zeros_like(pi_option).add(prob)
@@ -51,19 +54,24 @@ class OCAgent(BaseAgent):
         config = self.config
         storage = Storage(config.rollout_length, ['beta', 'o', 'beta_adv', 'prev_o', 'init', 'eps'])
 
+        # run one episode
         for _ in range(config.rollout_length):
+
             prediction = self.network(self.states)
             epsilon = config.random_option_prob(config.num_workers)
 
             # select option
             options = self.sample_option(prediction, epsilon, self.prev_options, self.is_initial_states)
 
+            # Gaussian policy
             mean = prediction['mean'][self.worker_index, options]
             std = prediction['std'][self.worker_index, options]
             dist = torch.distributions.Normal(mean, std)
 
             # select action
             actions = dist.sample()
+
+            # entropy
             log_pi = dist.log_prob(actions).sum(-1).unsqueeze(-1)
             entropy = dist.entropy().sum(-1).unsqueeze(-1)
 

@@ -3,8 +3,44 @@
 # Permission given to modify the code as long as you keep this        #
 # declaration at the top                                              #
 #######################################################################
-
 from deep_rl import *
+
+
+def set_tasks(config):
+    if config.game == 'dm-walker':
+        tasks = ['walk', 'run']
+    elif config.game == 'dm-walker-1':
+        tasks = ['squat', 'stand']
+        config.game = 'dm-walker'
+    elif config.game == 'dm-walker-2':
+        tasks = ['walk', 'backward']
+        config.game = 'dm-walker'
+    elif config.game == 'dm-finger':
+        tasks = ['turn_easy', 'turn_hard']
+    elif config.game == 'dm-reacher':
+        tasks = ['easy', 'hard']
+    elif config.game == 'dm-cartpole-b':
+        tasks = ['balance', 'balance_sparse']
+        config.game = 'dm-cartpole'
+    elif config.game == 'dm-cartpole-s':
+        tasks = ['swingup', 'swingup_sparse']
+        config.game = 'dm-cartpole'
+    elif config.game == 'dm-fish':
+        tasks = ['upright', 'downleft']
+    elif config.game == 'dm-hopper':
+        tasks = ['stand', 'hop']
+    elif config.game == 'dm-acrobot':
+        tasks = ['swingup', 'swingup_sparse']
+    elif config.game == 'dm-manipulator':
+        tasks = ['bring_ball', 'bring_peg']
+    elif config.game == 'dm-cheetah':
+        tasks = ['run', 'backward']
+    else:
+        raise NotImplementedError
+
+    games = ['%s-%s' % (config.game, t) for t in tasks]
+    config.tasks = [Task(g, num_envs=config.num_workers) for g in games]
+    config.game = games[0]
 
 
 # DQN
@@ -343,20 +379,34 @@ def option_critic_pixel(**kwargs):
 # Option-critic continuous
 def oc_continuous(**kwargs):
     generate_tag(kwargs)
-    kwargs.setdefault('log_level', 1)
+    kwargs.setdefault('log_level', 0)
+    kwargs.setdefault('num_o', 4)
+    kwargs.setdefault('learning', 'all')
+    kwargs.setdefault('gate', nn.ReLU())
+    kwargs.setdefault('entropy_weight', 0.01)
+    kwargs.setdefault('tasks', False)
+    kwargs.setdefault('max_steps', 2e6)
+    kwargs.setdefault('num_workers', 16)
     config = Config()
     config.merge(kwargs)
+
+    if 'dm-humanoid' in config.game:
+        hidden_units = (128, 128)
+    else:
+        hidden_units = (64, 64)
 
     config.num_workers = 5
     config.task_fn = lambda: Task(config.game, num_envs=config.num_workers)
     config.eval_env = Task(config.game)
     config.optimizer_fn = lambda params: torch.optim.RMSprop(params, 0.001)
-    config.network_fn = lambda: OptionGaussianActorCriticNet(config.state_dim, config.action_dim, num_options=2,
-                                                             phi_body=DummyBody(config.state_dim),
-                                                             actor_body=FCBody(config.state_dim),
-                                                             critic_body=FCBody(config.state_dim),
-                                                             option_body_fn=FCBody(config.state_dim)
-                                                             )
+    config.network_fn = lambda: OptionGaussianActorCriticNet(
+        config.state_dim, config.action_dim,
+        num_options=config.num_o,
+        phi_body=DummyBody(config.state_dim),
+        actor_body=FCBody(config.state_dim, hidden_units=hidden_units, gate=config.gate),
+        critic_body=FCBody(config.state_dim, hidden_units=hidden_units, gate=config.gate),
+        option_body_fn=lambda: FCBody(config.state_dim, hidden_units=hidden_units, gate=config.gate),
+    )
 
     config.random_option_prob = LinearSchedule(1.0, 0.1, 1e4)
     config.discount = 0.99
@@ -370,7 +420,6 @@ def oc_continuous(**kwargs):
     config.beta_reg = 0.01
     config.log_interval = 2048
     config.save_interval = 100
-    config.max_steps = 1e6
     run_steps(OCAgent(config))
 
 
@@ -587,6 +636,9 @@ if __name__ == '__main__':
     set_one_thread()
     random_seed()
     select_device(-1)
+    env_list = ['RoboschoolHopper-v1', 'RoboschoolWalker2d-v1',
+                'RoboschoolHalfCheetah-v1', 'RoboschoolAnt-v1',
+                'RoboschoolHumanoid-v1']
     # select_device(0)
 
     game = 'CartPole-v0'
@@ -599,7 +651,7 @@ if __name__ == '__main__':
     # ppo_feature(game=game)
 
     # game = 'HalfCheetah-v2'
-    game = 'RoboschoolWalker2d-v1'
+    game = 'RoboschoolHopper-v1'
     oc_continuous(game=game)
     # doc_continuous(game=game)
     # a2c_continuous(game=game)
@@ -616,7 +668,3 @@ if __name__ == '__main__':
     # n_step_dqn_pixel(game=game)
     # option_critic_pixel(game=game)
     # ppo_pixel(game=game)
-
-    env_list = ['RoboschoolHopper-v1', 'RoboschoolWalker2d-v1',
-                'RoboschoolHalfCheetah-v1', 'RoboschoolAnt-v1',
-                'RoboschoolHumanoid-v1']

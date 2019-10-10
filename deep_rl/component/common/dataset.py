@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Dataset(object):
     def __init__(self, data_map, deterministic=False, shuffle=True):
         self.data_map = data_map
