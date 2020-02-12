@@ -399,13 +399,15 @@ def oc_continuous(**kwargs):
     config.task_fn = lambda: Task(config.game, num_envs=config.num_workers)
     config.eval_env = Task(config.game)
     config.optimizer_fn = lambda params: torch.optim.RMSprop(params, 0.001)
+    
     config.network_fn = lambda: OptionGaussianActorCriticNet(
-        config.state_dim, config.action_dim,
+        config.state_dim,
+        config.action_dim,
         num_options=config.num_o,
-        phi_body=DummyBody(config.state_dim),
+        # phi_body=DummyBody(config.state_dim),
         actor_body=FCBody(config.state_dim, hidden_units=hidden_units, gate=config.gate),
         critic_body=FCBody(config.state_dim, hidden_units=hidden_units, gate=config.gate),
-        option_body_fn=lambda: FCBody(config.state_dim, hidden_units=hidden_units, gate=config.gate),
+        option_body_fn=lambda:FCBody(config.state_dim, hidden_units=hidden_units, gate=config.gate),
     )
 
     config.random_option_prob = LinearSchedule(1.0, 0.1, 1e4)
@@ -483,10 +485,11 @@ def ppo_continuous(**kwargs):
 
     config.task_fn = lambda: Task(config.game)
     config.eval_env = config.task_fn()
-
+    
     config.network_fn = lambda: GaussianActorCriticNet(
         config.state_dim, config.action_dim, actor_body=FCBody(config.state_dim, gate=torch.tanh),
         critic_body=FCBody(config.state_dim, gate=torch.tanh))
+    
     config.optimizer_fn = lambda params: torch.optim.Adam(params, 3e-4, eps=1e-5)
     config.discount = 0.99
     config.use_gae = True
@@ -513,11 +516,12 @@ def ppoc_continuous(**kwargs):
     config.eval_env = config.task_fn()
 
     config.network_fn = lambda: OptionGaussianActorCriticNet(
-        config.state_dim, config.action_dim, num_options=8,
+        config.state_dim, config.action_dim, num_options=4,
         actor_body=FCBody(config.state_dim, gate=torch.tanh),
         critic_body=FCBody(config.state_dim, gate=torch.tanh),
         option_body_fn=FCBody(config.state_dim)
-                                                             )
+    )
+    
     config.optimizer_fn = lambda params: torch.optim.Adam(params, 3e-4, eps=1e-5)
     config.discount = 0.99
     config.use_gae = True
@@ -528,7 +532,7 @@ def ppoc_continuous(**kwargs):
     config.mini_batch_size = 64
     config.ppo_ratio_clip = 0.2
     config.log_interval = 2048
-    config.max_steps = 1e7
+    config.max_steps = 1e6
     config.beta_reg = 0.01
     config.state_normalizer = MeanStdNormalizer()
     run_steps(PPOCAgent(config))
@@ -641,7 +645,7 @@ if __name__ == '__main__':
                 'RoboschoolHumanoid-v1']
     # select_device(0)
 
-    game = 'CartPole-v0'
+    # game = 'CartPole-v0'
     # dqn_feature(game=game)
     # quantile_regression_dqn_feature(game=game)
     # categorical_dqn_feature(game=game)
@@ -650,17 +654,20 @@ if __name__ == '__main__':
     # option_critic_feature(game=game)
     # ppo_feature(game=game)
 
-    # game = 'HalfCheetah-v2'
-    game = 'RoboschoolHopper-v1'
-    oc_continuous(game=game)
+    game = 'HalfCheetah-v2'
+    # game = 'Walker2d-v2',
+    # game = 'Hopper-v2',
+    # game = 'Ant-v2',
+    # game = 'RoboschoolHopper-v1'
+    # oc_continuous(game=game)
     # doc_continuous(game=game)
     # a2c_continuous(game=game)
     # ppo_continuous(game=game)
     # ddpg_continuous(game=game)
     # td3_continuous(game=game)
-    # ppoc_continuous(game=game)
+    ppoc_continuous(game=game)
 
-    game = 'BreakoutNoFrameskip-v4'
+    # game = 'BreakoutNoFrameskip-v4'
     # dqn_pixel(game=game)
     # quantile_regression_dqn_pixel(game=game)
     # categorical_dqn_pixel(game=game)

@@ -583,8 +583,8 @@ if __name__ == '__main__':
                 'RoboschoolHalfCheetah-v1', 'RoboschoolAnt-v1',
                 'RoboschoolHumanoid-v1']
 
-    game = 'RoboschoolHopper-v1'
-    # game = 'Walker2d-v2'
+    # game = 'RoboschoolHopper-v1'
+    game = 'Walker2d-v2'
     # game = 'Swimmer-v2'
     # game = 'dm-walker-walk'
     # game = 'dm-fish-upright'
@@ -650,25 +650,25 @@ if __name__ == '__main__':
     #     # max_steps=4e3,
     # )
 
-    # oc_continuous(
-    #     game=game,
-    #     log_level=1,
-    #     num_o=4,
-    #     # tasks=False,
-    #     tasks=True,
-    #     max_steps=int(4e3),
-    #     # gate=nn.Tanh(),
-    # )
-
-    ppoc_continuous(
+    oc_continuous(
         game=game,
         log_level=1,
         num_o=4,
-        tasks=False,
-        # tasks=True,
-        # max_steps=int(4e3),
-        gate=nn.Tanh(),
+        # tasks=False,
+        tasks=True,
+        max_steps=int(5e5),
+        # gate=nn.Tanh(),
     )
+
+    # ppoc_continuous(
+    #     game=game,
+    #     log_level=1,
+    #     num_o=4,
+    #     tasks=False,
+    #     # tasks=True,
+    #     # max_steps=int(4e3),
+    #     gate=nn.Tanh(),
+    # )
 
     # visualize_a_squared_c(
     #     game=game,

@@ -27,6 +27,7 @@ except ImportError:
 def make_env(env_id, seed, rank, episode_life=True):
     def _thunk():
         random_seed(seed)
+        # print('env_id', env_id)
         if env_id.startswith("dm"):
             import dm_control2gym
             _, domain, task = env_id.split('-')
@@ -160,7 +161,11 @@ class Task:
                  seed=np.random.randint(int(1e5))):
         if log_dir is not None:
             mkdir(log_dir)
-        envs = [make_env(name, seed, i, episode_life) for i in range(num_envs)]
+        if isinstance(name, tuple):
+            envs = [make_env(name[0], seed, i, episode_life) for i in range(num_envs)]
+        else:
+            envs = [make_env(name, seed, i, episode_life) for i in range(num_envs)]
+        
         if single_process:
             Wrapper = DummyVecEnv
         else:

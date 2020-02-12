@@ -11,6 +11,7 @@ from .BaseAgent import *
 class OCAgent(BaseAgent):
     def __init__(self, config):
         BaseAgent.__init__(self, config)
+        
         self.config = config
         self.task = config.task_fn()
         self.network = config.network_fn()

@@ -154,7 +154,7 @@ def ppo_continuous(**kwargs):
     config.mini_batch_size = 64
     config.ppo_ratio_clip = 0.2
     config.log_interval = 2048
-    config.max_steps = 1e6
+    config.max_steps = 5e5
     config.state_normalizer = MeanStdNormalizer()
     run_steps(PPOAgent(config))
 
@@ -298,14 +298,15 @@ if __name__ == '__main__':
                 'RoboschoolHalfCheetah-v1', 'RoboschoolAnt-v1',
                 'RoboschoolHumanoid-v1']
 
-    # game = 'HalfCheetah-v2'
+    game = 'HalfCheetah-v2'
     # oc_continuous(game=game)
     # doc_continuous(game=game)
     # a2c_continuous(game=game)
-    # ppo_continuous(game=game)
+    ppo_continuous(game=game)
     # ddpg_continuous(game=game)
     # td3_continuous(game=game)
-    for i in range(len(env_list)):
-        game = env_list[i]
-        ppoc_continuous(game=game)
+    
+    # for i in range(len(env_list)):
+    #     game = env_list[i]
+    #     ppoc_continuous(game=game)
 
