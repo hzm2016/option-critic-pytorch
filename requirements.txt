@@ -1,7 +1,7 @@
 mujoco-py==1.50.1.68
 torch==1.1.0
 gym==0.1
-tensorflow==1.12.0
+tensorflow==2.3.1
 git+git://github.com/deepmind/dm_control.git@1038345fa347165b7e29fa677824b2e9ee87762f
 git+https://github.com/ShangtongZhang/dm_control2gym.git@scalar_fix
 torchvision==0.2.1
